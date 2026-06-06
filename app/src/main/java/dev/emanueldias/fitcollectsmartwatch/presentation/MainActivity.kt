@@ -28,23 +28,23 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import dev.emanueldias.fitcollectsmartwatch.R
-import dev.emanueldias.fitcollectsmartwatch.presentation.initial.InitialScreen
+import dev.emanueldias.fitcollectsmartwatch.presentation.navigation.AppNavigation
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            WearApp("Android")
+            WearApp()
         }
     }
 }
 
 @Composable
-fun WearApp(greetingName: String) {
+fun WearApp() {
     FitCollectSmartwatchTheme {
         AppScaffold {
-            InitialScreen()
+            AppNavigation()
         }
     }
 }

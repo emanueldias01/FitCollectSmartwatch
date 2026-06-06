@@ -23,7 +23,7 @@ import dev.emanueldias.fitcollectsmartwatch.presentation.theme.AndroidGreenDark
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 @Composable
-fun InitialScreen() {
+fun InitialScreen(onNavigateToScan: () -> Unit) {
     ScreenScaffold() {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -43,7 +43,7 @@ fun InitialScreen() {
             Spacer(modifier = Modifier.size(16.dp))
 
             Button(
-                onClick = {},
+                onClick = onNavigateToScan,
             ) {
                 Icon(painter = painterResource(R.drawable.outline_play_arrow_24), contentDescription = "init scan")
             }
@@ -58,6 +58,6 @@ fun InitialScreen() {
 @Composable
 private fun InitialScreenPreview() {
     FitCollectSmartwatchTheme {
-        InitialScreen()
+        InitialScreen(onNavigateToScan = {})
     }
 }

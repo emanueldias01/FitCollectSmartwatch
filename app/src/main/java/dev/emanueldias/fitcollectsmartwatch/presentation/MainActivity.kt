@@ -28,6 +28,7 @@ import androidx.wear.compose.material3.lazy.transformedHeight
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import androidx.wear.compose.ui.tooling.preview.WearPreviewFontScales
 import dev.emanueldias.fitcollectsmartwatch.R
+import dev.emanueldias.fitcollectsmartwatch.presentation.initial.InitialScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 class MainActivity : ComponentActivity() {
@@ -43,73 +44,7 @@ class MainActivity : ComponentActivity() {
 fun WearApp(greetingName: String) {
     FitCollectSmartwatchTheme {
         AppScaffold {
-            val listState = rememberTransformingLazyColumnState()
-            val transformationSpec = rememberTransformationSpec()
-            ScreenScaffold(
-                scrollState = listState,
-                edgeButton = {
-                    EdgeButton(
-                        onClick = { /*TODO*/ },
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                            ),
-                    ) {
-                        Text("More")
-                    }
-                },
-            ) { contentPadding -> // ScreenScaffold provides default padding; adjust as needed
-                TransformingLazyColumn(contentPadding = contentPadding, state = listState) {
-                    item {
-                        ListHeader(
-                            modifier =
-                                Modifier.fillMaxWidth().transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text(text = stringResource(R.string.hello_world, greetingName))
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button A")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button B")
-                        }
-                    }
-                    item {
-                        Button(
-                            onClick = { /*TODO*/ },
-                            modifier = Modifier.fillMaxWidth()
-                                .transformedHeight(this, transformationSpec),
-                            transformation = SurfaceTransformation(transformationSpec),
-                        ) {
-                            Text("Button C")
-                        }
-                    }
-
-                }
-            }
+            InitialScreen()
         }
     }
-}
-
-@WearPreviewDevices
-@WearPreviewFontScales
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
 }

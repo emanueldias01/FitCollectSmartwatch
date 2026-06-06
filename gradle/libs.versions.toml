@@ -1,6 +1,6 @@
 [versions]
 agp = "9.2.1"
-playServicesWearable = "18.0.0"
+playServicesWearable = "19.0.0"
 kotlin = "2.2.10"
 composeBom = "2024.09.00"
 composeMaterial3 = "1.5.6"

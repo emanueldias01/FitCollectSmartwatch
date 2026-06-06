@@ -13,7 +13,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "dev.emanueldias.fitcollectsmartwatch"
+        applicationId = "dev.emanueldias.fitcollect"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

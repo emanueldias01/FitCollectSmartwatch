@@ -1,4 +1,4 @@
-package dev.emanueldias.fitcollectsmartwatch.presentation.simpleHeath
+package dev.emanueldias.fitcollectsmartwatch.presentation.simpleHeart
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -10,6 +10,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,21 +21,40 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.AndroidGreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
+import androidx.wear.compose.material3.MaterialTheme
+
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun SimpleHeathScreen(modifier: Modifier = Modifier) {
-    ScreenScaffold(modifier = modifier) {
+fun SimpleHeartScreen(
+    viewModel: SimpleHeartViewModel = viewModel()
+) {
+
+    val uiState by viewModel.currentBpm.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.startMeasurer()
+    }
+
+    ScreenScaffold {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             EcgBackgroundAnimation()
 
+            Text(
+                text = if (uiState == 0.0) "--" else uiState.toInt().toString(),
+                color = AndroidGreen,
+                style = MaterialTheme.typography.displayMedium
+            )
         }
     }
 }
@@ -100,6 +121,6 @@ fun EcgBackgroundAnimation() {
 @Composable
 private fun SimpleHeathScreenPreview() {
     FitCollectSmartwatchTheme {
-        SimpleHeathScreen()
+        SimpleHeartScreen()
     }
 }

@@ -41,6 +41,8 @@ android {
 dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.room.runtime)
+    implementation(libs.health.services.client)
     implementation(libs.compose.navigation)
     implementation(libs.activity.compose)
     implementation(libs.compose.foundation)

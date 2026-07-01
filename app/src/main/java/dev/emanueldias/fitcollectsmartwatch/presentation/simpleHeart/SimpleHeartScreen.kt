@@ -7,7 +7,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.health.services.client.data.DataTypeAvailability
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.Icon
@@ -42,7 +45,15 @@ fun SimpleHeartScreen(
     onClickStop: () -> Unit,
 ) {
 
-    val uiState by viewModel.currentBpm.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    val statusText = when {
+        !uiState.hasPermission -> "Permissão necessária"
+        !uiState.supported -> "Sensor indisponível"
+        uiState.availability == DataTypeAvailability.UNAVAILABLE_DEVICE_OFF_BODY -> "Coloque no pulso"
+        uiState.availability == DataTypeAvailability.ACQUIRING -> "Lendo..."
+        else -> null
+    }
 
     LaunchedEffect(Unit) {
         viewModel.startMeasurer()
@@ -53,13 +64,26 @@ fun SimpleHeartScreen(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
+
             EcgBackgroundAnimation()
 
-            Text(
-                text = if (uiState == 0.0) "--" else uiState.toInt().toString(),
-                color = AndroidGreen,
-                style = MaterialTheme.typography.displayMedium
-            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (uiState.bpm == 0.0) "--" else uiState.bpm.toInt().toString(),
+                    color = AndroidGreen,
+                    style = MaterialTheme.typography.displayMedium
+                )
+                statusText?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = AndroidGreen
+                    )
+                }
+            }
 
             Button(
                 onClick = onClickStop,

@@ -17,22 +17,15 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
-import dev.emanueldias.fitcollectsmartwatch.R
+import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 @Composable
 fun MainScreen(
-    onClickSimpleHealth: () -> Unit = {}
+    onClickSimpleHealth: () -> Unit = {},
+    onNavigateToSport: (Sport) -> Unit = {}
 ) {
-    val sports = listOf(
-        SportItem("Corrida", R.drawable.outline_directions_run_24),
-        SportItem("Ciclismo", R.drawable.outline_directions_bike_24),
-        SportItem("Natação", R.drawable.outline_pool_24),
-        SportItem("Academia", R.drawable.outline_fitness_center_24),
-        SportItem("Trilha", R.drawable.outline_mountain_flag_24),
-        SportItem("Ginástica", R.drawable.outline_sports_gymnastics_24),
-        SportItem("Batimentos", R.drawable.rounded_ecg_heart_24),
-    )
+    val sports = Sport.entries
 
     val listState = rememberScalingLazyListState()
 
@@ -56,15 +49,17 @@ fun MainScreen(
             items(sports) { sport ->
                 Button(
                     onClick = {
-                        if (sport.name == "Batimentos") {
+                        if (sport == Sport.HEART_RATE) {
                             onClickSimpleHealth()
+                        } else {
+                            onNavigateToSport(sport)
                         }
                     },
-                    label = { Text(sport.name) },
+                    label = { Text(sport.displayName) },
                     icon = {
                         Icon(
                             painter = painterResource(sport.iconRes),
-                            contentDescription = sport.name
+                            contentDescription = sport.displayName
                         )
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -73,8 +68,6 @@ fun MainScreen(
         }
     }
 }
-
-private data class SportItem(val name: String, val iconRes: Int)
 
 @WearPreviewDevices
 @Composable

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -32,10 +33,6 @@ import androidx.wear.compose.material3.Text
 import dev.emanueldias.fitcollectsmartwatch.R
 import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 
-private enum class SportPhase {
-    Idle, Countdown, Running, Paused
-}
-
 @Composable
 fun SportScreen(
     type: Sport,
@@ -44,20 +41,13 @@ fun SportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
-    val currentPhase = when (uiState) {
-        is SportUiState.Idle -> SportPhase.Idle
-        is SportUiState.Countdown -> SportPhase.Countdown
-        is SportUiState.Running -> SportPhase.Running
-        is SportUiState.Paused -> SportPhase.Paused
-    }
-
     ScreenScaffold {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
             AnimatedContent(
-                targetState = currentPhase,
+                targetState = uiState.phase,
                 transitionSpec = {
                     fadeIn(animationSpec = tween(300)) togetherWith fadeOut(animationSpec = tween(300))
                 },
@@ -67,15 +57,14 @@ fun SportScreen(
                     SportPhase.Idle -> IdleView(type, onStart = viewModel::startCountdown)
 
                     SportPhase.Countdown -> {
-                        val seconds = (uiState as? SportUiState.Countdown)?.seconds ?: 0
-                        CountdownView(seconds)
+                        CountdownView(uiState.countdownSeconds)
                     }
 
                     SportPhase.Running -> {
-                        val seconds = (uiState as? SportUiState.Running)?.elapsedTimeSeconds ?: 0L
                         TimerView(
                             type = type,
-                            time = viewModel.formatTime(seconds),
+                            time = viewModel.formatTime(uiState.elapsedTimeSeconds),
+                            bpm = uiState.bpm,
                             isPaused = false,
                             onPause = viewModel::pauseTimer,
                             onStop = {
@@ -86,10 +75,10 @@ fun SportScreen(
                     }
 
                     SportPhase.Paused -> {
-                        val seconds = (uiState as? SportUiState.Paused)?.elapsedTimeSeconds ?: 0L
                         TimerView(
                             type = type,
-                            time = viewModel.formatTime(seconds),
+                            time = viewModel.formatTime(uiState.elapsedTimeSeconds),
+                            bpm = uiState.bpm,
                             isPaused = true,
                             onResume = viewModel::resumeTimer,
                             onStop = {
@@ -152,6 +141,7 @@ private fun CountdownView(seconds: Int) {
 private fun TimerView(
     type: Sport,
     time: String,
+    bpm: Double,
     isPaused: Boolean,
     onPause: () -> Unit = {},
     onResume: () -> Unit = {},
@@ -167,6 +157,25 @@ private fun TimerView(
             modifier = Modifier.size(24.dp),
             tint = MaterialTheme.colorScheme.secondary
         )
+        
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = if (bpm > 0) bpm.toInt().toString() else "--",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.error
+            )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = "BPM",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
         Text(
             text = time,
             style = MaterialTheme.typography.displayMedium,

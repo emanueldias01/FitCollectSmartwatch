@@ -7,7 +7,6 @@ import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import dev.emanueldias.fitcollectsmartwatch.presentation.initial.InitialScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.main.MainScreen
-import dev.emanueldias.fitcollectsmartwatch.presentation.scan.ScanScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.simpleHeart.SimpleHeartScreen
 
 @Composable
@@ -22,16 +21,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             route = "/initial",
             content = {
                 InitialScreen(
-                    onNavigateToScan = { navController.navigate("/scan") }
-                )
-            }
-        )
-
-        composable(
-            route = "/scan",
-            content = {
-                ScanScreen(
-                    onClickAccept = { navController.navigate("/main") }
+                    onNavigateToMain = { navController.navigate("/main") }
                 )
             }
         )

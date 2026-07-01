@@ -28,7 +28,7 @@ import dev.emanueldias.fitcollectsmartwatch.presentation.theme.AndroidGreenDark
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 @Composable
-fun InitialScreen(onNavigateToScan: () -> Unit) {
+fun InitialScreen(onNavigateToMain: () -> Unit) {
     val context = LocalContext.current
 
     val permissions = remember {
@@ -105,7 +105,7 @@ fun InitialScreen(onNavigateToScan: () -> Unit) {
                 Spacer(modifier = Modifier.size(16.dp))
 
                 Button(
-                    onClick = onNavigateToScan,
+                    onClick = onNavigateToMain,
                     modifier = Modifier.size(52.dp)
                 ) {
                     Icon(
@@ -161,6 +161,6 @@ fun InitialScreen(onNavigateToScan: () -> Unit) {
 @Composable
 private fun InitialScreenPreview() {
     FitCollectSmartwatchTheme {
-        InitialScreen(onNavigateToScan = {})
+        InitialScreen(onNavigateToMain = {})
     }
 }

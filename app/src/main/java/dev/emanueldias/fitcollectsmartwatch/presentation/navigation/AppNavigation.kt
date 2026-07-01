@@ -38,7 +38,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
         composable(
             route = "/simpleHeart",
             content = {
-                SimpleHeartScreen()
+                SimpleHeartScreen(
+                    onClickStop = {navController.popBackStack()}
+                )
             }
         )
     }

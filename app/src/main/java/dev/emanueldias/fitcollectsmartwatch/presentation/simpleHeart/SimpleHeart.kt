@@ -9,6 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,22 +20,26 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathMeasure
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.wear.compose.material3.Button
+import androidx.wear.compose.material3.Icon
+import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.Text
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import dev.emanueldias.fitcollectsmartwatch.R
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.AndroidGreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
-
-import androidx.wear.compose.material3.MaterialTheme
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SimpleHeartScreen(
-    viewModel: SimpleHeartViewModel = viewModel()
+    viewModel: SimpleHeartViewModel = viewModel(),
+    onClickStop: () -> Unit,
 ) {
 
     val uiState by viewModel.currentBpm.collectAsState()
@@ -55,6 +60,18 @@ fun SimpleHeartScreen(
                 color = AndroidGreen,
                 style = MaterialTheme.typography.displayMedium
             )
+
+            Button(
+                onClick = onClickStop,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 12.dp)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.outline_stop_24),
+                    contentDescription = "stop"
+                )
+            }
         }
     }
 }
@@ -121,6 +138,8 @@ fun EcgBackgroundAnimation() {
 @Composable
 private fun SimpleHeathScreenPreview() {
     FitCollectSmartwatchTheme {
-        SimpleHeartScreen()
+        SimpleHeartScreen(
+            onClickStop = {}
+        )
     }
 }

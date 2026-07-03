@@ -47,6 +47,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".services.SportService"
+            android:foregroundServiceType="health"
+            android:exported="false" />
     </application>
 
 </manifest>

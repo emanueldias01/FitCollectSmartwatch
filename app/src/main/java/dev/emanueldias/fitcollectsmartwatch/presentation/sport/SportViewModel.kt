@@ -1,12 +1,15 @@
 package dev.emanueldias.fitcollectsmartwatch.presentation.sport
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
 import androidx.health.services.client.data.DataTypeAvailability
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import dev.emanueldias.fitcollectsmartwatch.health.HealthServicesManager
-import dev.emanueldias.fitcollectsmartwatch.health.HeartRateMessage
-import kotlinx.coroutines.Job
+import dev.emanueldias.fitcollectsmartwatch.services.SportService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,12 +35,33 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow(SportUiState())
     val uiState: StateFlow<SportUiState> = _uiState.asStateFlow()
 
-    private var timerJob: Job? = null
-    private var measureJob: Job? = null
+    private var sportService: SportService? = null
+    private var isBound = false
 
-    private val healthServicesManager = HealthServicesManager.getInstance(application)
-    private var startTime: Long = 0
-    private var accumulatedTime: Long = 0
+    private val connection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            val binder = service as SportService.LocalBinder
+            sportService = binder.getService()
+            isBound = true
+
+            viewModelScope.launch {
+                sportService?.uiState?.collect { serviceState ->
+                    _uiState.value = serviceState
+                }
+            }
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            sportService = null
+            isBound = false
+        }
+    }
+
+    init {
+        Intent(application, SportService::class.java).also { intent ->
+            application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
+        }
+    }
 
     fun startCountdown() {
         viewModelScope.launch {
@@ -48,77 +72,36 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
                 )
                 delay(1000)
             }
-            startTimer()
+            startSportService()
         }
     }
 
-    private fun startTimer() {
-        startTime = System.currentTimeMillis()
-        timerJob?.cancel()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                val currentSessionTime = (System.currentTimeMillis() - startTime) / 1000
-                _uiState.value = _uiState.value.copy(
-                    phase = SportPhase.Running,
-                    elapsedTimeSeconds = accumulatedTime + currentSessionTime
-                )
-                delay(1000)
-            }
-        }
-        
-        startMeasurement()
-    }
-
-    private fun startMeasurement() {
-        measureJob?.cancel()
-        measureJob = viewModelScope.launch {
-            val supported = healthServicesManager.hasHeartRateCapability()
-            _uiState.value = _uiState.value.copy(isSupported = supported, hasPermission = true)
-            if (!supported) return@launch
-
-            healthServicesManager.heartRateMeasureFlow().collect { message ->
-                _uiState.value = when (message) {
-                    is HeartRateMessage.Data -> _uiState.value.copy(
-                        bpm = message.bpm,
-                        availability = DataTypeAvailability.AVAILABLE
-                    )
-                    is HeartRateMessage.AvailabilityChanged ->
-                        _uiState.value.copy(availability = message.availability)
-                }
-            }
-        }
+    private fun startSportService() {
+        val intent = Intent(getApplication(), SportService::class.java)
+        getApplication<Application>().startForegroundService(intent)
+        sportService?.startSport()
     }
 
     fun pauseTimer() {
-        if (_uiState.value.phase == SportPhase.Running) {
-            timerJob?.cancel()
-            measureJob?.cancel()
-            accumulatedTime += (System.currentTimeMillis() - startTime) / 1000
-            _uiState.value = _uiState.value.copy(
-                phase = SportPhase.Paused,
-                elapsedTimeSeconds = accumulatedTime
-            )
-        }
+        sportService?.pauseSport()
     }
 
     fun resumeTimer() {
-        if (_uiState.value.phase == SportPhase.Paused) {
-            startTimer()
-        }
+        sportService?.startSport()
     }
 
     fun stopTimer() {
-        timerJob?.cancel()
-        measureJob?.cancel()
-        accumulatedTime = 0
-        startTime = 0
-        _uiState.value = SportUiState()
+        sportService?.stopSport()
+        val intent = Intent(getApplication(), SportService::class.java)
+        getApplication<Application>().stopService(intent)
     }
 
     override fun onCleared() {
         super.onCleared()
-        timerJob?.cancel()
-        measureJob?.cancel()
+        if (isBound) {
+            getApplication<Application>().unbindService(connection)
+            isBound = false
+        }
     }
 
     fun formatTime(seconds: Long): String {

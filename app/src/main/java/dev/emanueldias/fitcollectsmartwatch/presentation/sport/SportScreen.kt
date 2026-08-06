@@ -54,7 +54,7 @@ fun SportScreen(
                 label = "SportStateAnimation"
             ) { phase ->
                 when (phase) {
-                    SportPhase.Idle -> IdleView(type, onStart = viewModel::startCountdown)
+                    SportPhase.Idle -> IdleView(type, onStart = { viewModel.startCountdown(type) })
 
                     SportPhase.Countdown -> {
                         CountdownView(uiState.countdownSeconds)

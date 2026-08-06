@@ -6,6 +6,7 @@ import androidx.wear.compose.navigation.SwipeDismissableNavHost
 import androidx.wear.compose.navigation.composable
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
+import dev.emanueldias.fitcollectsmartwatch.presentation.history.HistoryScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.initial.InitialScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.main.MainScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.simpleHeart.SimpleHeartScreen
@@ -23,7 +24,17 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             route = "/initial",
             content = {
                 InitialScreen(
-                    onNavigateToMain = { navController.navigate("/main") }
+                    onNavigateToMain = { navController.navigate("/main") },
+                    onNavigateToHistory = { navController.navigate("/history") }
+                )
+            }
+        )
+
+        composable(
+            route = "/history",
+            content = {
+                HistoryScreen(
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         )

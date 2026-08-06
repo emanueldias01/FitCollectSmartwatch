@@ -9,6 +9,7 @@ import android.os.IBinder
 import androidx.health.services.client.data.DataTypeAvailability
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 import dev.emanueldias.fitcollectsmartwatch.services.SportService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,7 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
 
     private var sportService: SportService? = null
     private var isBound = false
+    private var currentSport: Sport? = null
 
     private val connection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -63,7 +65,8 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun startCountdown() {
+    fun startCountdown(sport: Sport) {
+        currentSport = sport
         viewModelScope.launch {
             for (i in 5 downTo 1) {
                 _uiState.value = _uiState.value.copy(
@@ -77,9 +80,10 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun startSportService() {
+        val sport = currentSport ?: return
         val intent = Intent(getApplication(), SportService::class.java)
         getApplication<Application>().startForegroundService(intent)
-        sportService?.startSport()
+        sportService?.startSport(sport)
     }
 
     fun pauseTimer() {
@@ -87,7 +91,8 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun resumeTimer() {
-        sportService?.startSport()
+        val sport = currentSport ?: return
+        sportService?.startSport(sport)
     }
 
     fun stopTimer() {

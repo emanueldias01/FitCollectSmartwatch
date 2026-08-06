@@ -5,13 +5,13 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -21,13 +21,14 @@ import androidx.wear.compose.material3.*
 import androidx.wear.compose.ui.tooling.preview.WearPreviewDevices
 import dev.emanueldias.fitcollectsmartwatch.R
 import dev.emanueldias.fitcollectsmartwatch.health.SensorPermissions
-import dev.emanueldias.fitcollectsmartwatch.presentation.theme.AndroidGreenDark
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
 @Composable
-fun InitialScreen(onNavigateToMain: () -> Unit) {
+fun InitialScreen(
+    onNavigateToMain: () -> Unit,
+    onNavigateToHistory: () -> Unit
+) {
     val context = LocalContext.current
-
     var isGranted by remember { mutableStateOf(false) }
 
     fun checkPermissions() {
@@ -50,61 +51,85 @@ fun InitialScreen(onNavigateToMain: () -> Unit) {
             verticalArrangement = Arrangement.Center
         ) {
             if (isGranted) {
-                Image(
+                Icon(
                     painter = painterResource(R.drawable.outline_fitness_center_24),
                     contentDescription = "logo",
-                    modifier = Modifier.size(60.dp)
+                    modifier = Modifier.size(42.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
 
-                Spacer(modifier = Modifier.size(8.dp))
-                Text(text = "FitCollect", color = AndroidGreenDark, fontSize = 16.sp)
-                Spacer(modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                Text(
+                    text = "FitCollect",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Button(
-                    onClick = onNavigateToMain,
-                    modifier = Modifier.size(52.dp)
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.outline_play_arrow_24),
-                        contentDescription = "init scan"
-                    )
+                    // Botão Play (Principal)
+                    Button(
+                        onClick = onNavigateToMain,
+                        modifier = Modifier.size(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.outline_play_arrow_24),
+                            contentDescription = "Iniciar Treino",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+
+                    // Botão Histórico
+                    FilledTonalButton(
+                        onClick = onNavigateToHistory,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.outline_fitness_center_24),
+                            contentDescription = "Ver Histórico",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             } else {
                 Text(
-                    text = "Sensores e Atividade Física são necessários.",
+                    text = "Permissões necessárias para coletar dados de saúde.",
                     textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = AndroidGreenDark,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(bottom = 12.dp)
                 )
-
-                Spacer(modifier = Modifier.size(12.dp))
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Button(
                         onClick = { permissionLauncher.launch(SensorPermissions.required) },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = AndroidGreenDark)
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Permitir", fontSize = 12.sp, textAlign = TextAlign.Center)
+                        Text("Permitir", fontSize = 12.sp)
                     }
 
-                    Button(
+                    FilledTonalButton(
                         onClick = {
                             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                                 data = Uri.fromParts("package", context.packageName, null)
                             }
                             context.startActivity(intent)
                         },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.filledTonalButtonColors()
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text("Config.", fontSize = 12.sp, textAlign = TextAlign.Center)
+                        Text("Config.", fontSize = 12.sp)
                     }
                 }
             }
@@ -112,11 +137,10 @@ fun InitialScreen(onNavigateToMain: () -> Unit) {
     }
 }
 
-
 @WearPreviewDevices
 @Composable
 private fun InitialScreenPreview() {
     FitCollectSmartwatchTheme {
-        InitialScreen(onNavigateToMain = {})
+        InitialScreen(onNavigateToMain = {}, onNavigateToHistory = {})
     }
 }

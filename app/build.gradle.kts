@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -43,6 +44,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.play.services)
     implementation(libs.accompanist.permissions)
     implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
+    implementation(libs.kotlinx.serialization.json)
     implementation(libs.health.services.client)
     implementation(libs.compose.navigation)
     implementation(libs.activity.compose)

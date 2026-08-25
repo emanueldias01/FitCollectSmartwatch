@@ -15,5 +15,6 @@ enum class Sport(
     SWIMMING("Natação", R.drawable.outline_pool_24, true),
     GYM("Academia", R.drawable.outline_fitness_center_24, false),
     HIKING("Trilha", R.drawable.outline_mountain_flag_24, true),
-    GYMNASTICS("Ginástica", R.drawable.outline_sports_gymnastics_24, false)
+    GYMNASTICS("Ginástica", R.drawable.outline_sports_gymnastics_24, false),
+    TREADMILL("Esteira", R.drawable.outline_directions_run_24, false)
 }

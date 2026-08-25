@@ -179,6 +179,7 @@ class HealthServicesManager private constructor(context: Context) {
             Sport.GYM -> ExerciseType.WEIGHTLIFTING
             Sport.ELLIPTICAL -> ExerciseType.ELLIPTICAL
             Sport.GYMNASTICS -> ExerciseType.GYMNASTICS
+            Sport.TREADMILL -> ExerciseType.RUNNING_TREADMILL
         }
     }
 

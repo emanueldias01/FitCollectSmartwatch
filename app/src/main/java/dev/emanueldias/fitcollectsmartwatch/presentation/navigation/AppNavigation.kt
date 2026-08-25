@@ -9,11 +9,10 @@ import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 import dev.emanueldias.fitcollectsmartwatch.presentation.history.HistoryScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.initial.InitialScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.main.MainScreen
-import dev.emanueldias.fitcollectsmartwatch.presentation.simpleHeart.SimpleHeartScreen
 import dev.emanueldias.fitcollectsmartwatch.presentation.sport.SportScreen
 
 @Composable
-fun AppNavigation(modifier: Modifier = Modifier) {
+fun AppNavigation() {
     val navController = rememberSwipeDismissableNavController()
 
     SwipeDismissableNavHost(
@@ -25,7 +24,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             content = {
                 InitialScreen(
                     onNavigateToMain = { navController.navigate("/main") },
-                    onNavigateToHistory = { navController.navigate("/history") }
+                    onNavigateToHistory = { navController.navigate("/history") },
                 )
             }
         )
@@ -43,19 +42,9 @@ fun AppNavigation(modifier: Modifier = Modifier) {
             route = "/main",
             content = {
                 MainScreen(
-                    onClickSimpleHealth = { navController.navigate("/simpleHeart") },
                     onNavigateToSport = { sport ->
                         navController.navigate("/sport/${sport.name}")
                     }
-                )
-            }
-        )
-
-        composable(
-            route = "/simpleHeart",
-            content = {
-                SimpleHeartScreen(
-                    onClickStop = { navController.popBackStack() }
                 )
             }
         )

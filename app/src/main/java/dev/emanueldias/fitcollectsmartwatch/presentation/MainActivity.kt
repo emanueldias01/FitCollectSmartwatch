@@ -31,20 +31,20 @@ import dev.emanueldias.fitcollectsmartwatch.R
 import dev.emanueldias.fitcollectsmartwatch.presentation.navigation.AppNavigation
 import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwatchTheme
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            WearApp()
-        }
-    }
-}
-
 @Composable
 fun WearApp() {
     FitCollectSmartwatchTheme {
         AppScaffold {
             AppNavigation()
+        }
+    }
+}
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            WearApp()
         }
     }
 }

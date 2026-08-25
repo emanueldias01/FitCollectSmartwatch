@@ -8,6 +8,8 @@ data class WorkoutData(
     val startTime: Long,
     val endTime: Long,
     val durationSeconds: Long,
+    val distanceMeters: Double = 0.0,
+    val calories: Double = 0.0,
     val heartRateMeasurements: List<HeartRateMeasurement>
 )
 

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 enum class SportPhase {
     Idle, Countdown, Running, Paused
@@ -25,6 +26,8 @@ data class SportUiState(
     val phase: SportPhase = SportPhase.Idle,
     val bpm: Double = 0.0,
     val elapsedTimeSeconds: Long = 0,
+    val distanceMeters: Double = 0.0,
+    val calories: Double = 0.0,
     val countdownSeconds: Int = 0,
     val isSupported: Boolean = false,
     val hasPermission: Boolean = false,
@@ -63,6 +66,10 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
         Intent(application, SportService::class.java).also { intent ->
             application.bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
+    }
+
+    fun prepareSport(sport: Sport) {
+        sportService?.prepareSport(sport)
     }
 
     fun startCountdown(sport: Sport) {
@@ -117,6 +124,14 @@ class SportViewModel(application: Application) : AndroidViewModel(application) {
             String.format("%02d:%02d:%02d", h, m, s)
         } else {
             String.format("%02d:%02d", m, s)
+        }
+    }
+
+    fun formatDistance(meters: Double): String {
+        return if (meters < 1000) {
+            String.format(Locale.US, "%.0fm", meters)
+        } else {
+            String.format(Locale.US, "%.2fkm", meters / 1000.0)
         }
     }
 }

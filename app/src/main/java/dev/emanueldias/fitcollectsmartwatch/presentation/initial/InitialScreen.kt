@@ -3,6 +3,7 @@ package dev.emanueldias.fitcollectsmartwatch.presentation.initial
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -26,10 +27,11 @@ import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwa
 @Composable
 fun InitialScreen(
     onNavigateToMain: () -> Unit,
-    onNavigateToHistory: () -> Unit
+    onNavigateToHistory: () -> Unit,
 ) {
     val context = LocalContext.current
     var isGranted by remember { mutableStateOf(false) }
+
 
     fun checkPermissions() {
         isGranted = SensorPermissions.hasAllRequired(context)
@@ -54,29 +56,27 @@ fun InitialScreen(
                 Icon(
                     painter = painterResource(R.drawable.outline_fitness_center_24),
                     contentDescription = "logo",
-                    modifier = Modifier.size(42.dp),
+                    modifier = Modifier.size(32.dp),
                     tint = MaterialTheme.colorScheme.primary
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-                
                 Text(
                     text = "FitCollect",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Botão Play (Principal)
                     Button(
                         onClick = onNavigateToMain,
-                        modifier = Modifier.size(56.dp),
+                        modifier = Modifier.size(48.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary
@@ -85,21 +85,21 @@ fun InitialScreen(
                         Icon(
                             painter = painterResource(R.drawable.outline_play_arrow_24),
                             contentDescription = "Iniciar Treino",
-                            modifier = Modifier.size(32.dp)
+                            modifier = Modifier.size(28.dp)
                         )
                     }
 
-                    // Botão Histórico
                     FilledTonalButton(
                         onClick = onNavigateToHistory,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(40.dp)
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.outline_fitness_center_24),
                             contentDescription = "Ver Histórico",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
+
                 }
             } else {
                 Text(

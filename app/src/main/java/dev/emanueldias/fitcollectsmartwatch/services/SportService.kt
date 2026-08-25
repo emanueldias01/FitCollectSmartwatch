@@ -3,12 +3,15 @@ package dev.emanueldias.fitcollectsmartwatch.services
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
+import androidx.wear.ongoing.OngoingActivity
+import androidx.wear.ongoing.Status
 import dev.emanueldias.fitcollectsmartwatch.R
 import dev.emanueldias.fitcollectsmartwatch.data.local.AppDatabase
 import dev.emanueldias.fitcollectsmartwatch.data.local.WorkoutEntity
@@ -16,7 +19,8 @@ import dev.emanueldias.fitcollectsmartwatch.data.model.HeartRateMeasurement
 import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 import dev.emanueldias.fitcollectsmartwatch.data.model.WorkoutData
 import dev.emanueldias.fitcollectsmartwatch.health.HealthServicesManager
-import dev.emanueldias.fitcollectsmartwatch.health.HeartRateMessage
+import dev.emanueldias.fitcollectsmartwatch.health.HealthMessage
+import dev.emanueldias.fitcollectsmartwatch.presentation.MainActivity
 import dev.emanueldias.fitcollectsmartwatch.presentation.sport.SportPhase
 import dev.emanueldias.fitcollectsmartwatch.presentation.sport.SportUiState
 import kotlinx.coroutines.*
@@ -42,6 +46,8 @@ class SportService : Service() {
     private val measurements = mutableListOf<HeartRateMeasurement>()
     private var lastMeasurementTimestamp: Long = 0
     private var currentSport: Sport? = null
+    private var currentDistanceMeters: Double = 0.0
+    private var currentCalories: Double = 0.0
 
     private val binder = LocalBinder()
 
@@ -57,18 +63,29 @@ class SportService : Service() {
         createNotificationChannel()
     }
 
+    fun prepareSport(sport: Sport) {
+        serviceScope.launch {
+            healthServicesManager.prepareExercise(sport)
+        }
+    }
+
     fun startSport(sport: Sport) {
         if (currentSport == null) {
             currentSport = sport
             sessionStartTime = System.currentTimeMillis()
             measurements.clear()
+            currentDistanceMeters = 0.0
+            currentCalories = 0.0
         }
         
+        val notification = createNotification("Coleta em andamento...")
+        
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(1, createNotification("Sport em andamento..."), ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
         } else {
-            startForeground(1, createNotification("Sport em andamento..."))
+            startForeground(1, notification)
         }
+        
         startTime = System.currentTimeMillis()
         timerJob?.cancel()
         timerJob = serviceScope.launch {
@@ -78,25 +95,61 @@ class SportService : Service() {
                     phase = SportPhase.Running,
                     elapsedTimeSeconds = accumulatedTime + currentSessionTime
                 )
+                
+                updateOngoingActivity(sport)
+                
                 delay(1000)
             }
         }
-        startMeasurement()
+        startMeasurement(sport)
     }
 
-    private fun startMeasurement() {
+    private fun updateOngoingActivity(sport: Sport) {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        val notificationBuilder = NotificationCompat.Builder(this, "sport_channel")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setOngoing(true)
+
+        val ongoingActivity = OngoingActivity.Builder(applicationContext, 1, notificationBuilder)
+            .setAnimatedIcon(R.drawable.outline_play_arrow_24)
+            .setStaticIcon(R.drawable.outline_play_arrow_24)
+            .setTouchIntent(pendingIntent)
+            .setStatus(
+                Status.Builder()
+                    .addPart("text", Status.TextPart(sport.displayName))
+                    .build()
+            )
+            .build()
+        
+        ongoingActivity.apply(applicationContext)
+    }
+
+    private fun startMeasurement(sport: Sport) {
         measureJob?.cancel()
         measureJob = serviceScope.launch {
-            val supported = healthServicesManager.hasHeartRateCapability()
-            if (!supported) return@launch
-            healthServicesManager.heartRateMeasureFlow().collect { message ->
-                if (message is HeartRateMessage.Data) {
-                    _uiState.value = _uiState.value.copy(bpm = message.bpm)
-                    
-                    val now = System.currentTimeMillis()
-                    if (now - lastMeasurementTimestamp >= 30000) {
-                        measurements.add(HeartRateMeasurement(now, message.bpm))
-                        lastMeasurementTimestamp = now
+            healthServicesManager.exerciseFlow(sport).collect { message ->
+                when (message) {
+                    is HealthMessage.HeartRate -> {
+                        _uiState.value = _uiState.value.copy(bpm = message.bpm)
+                        
+                        val now = System.currentTimeMillis()
+                        if (now - lastMeasurementTimestamp >= 30000) {
+                            measurements.add(HeartRateMeasurement(now, message.bpm))
+                            lastMeasurementTimestamp = now
+                        }
+                    }
+                    is HealthMessage.Distance -> {
+                        currentDistanceMeters = message.meters
+                        _uiState.value = _uiState.value.copy(distanceMeters = currentDistanceMeters)
+                    }
+                    is HealthMessage.Calories -> {
+                        currentCalories = message.kcal
+                        _uiState.value = _uiState.value.copy(calories = currentCalories)
+                    }
+                    is HealthMessage.AvailabilityChanged -> {
+                        _uiState.value = _uiState.value.copy(availability = message.availability)
                     }
                 }
             }
@@ -125,6 +178,8 @@ class SportService : Service() {
                 currentSport = null
                 measurements.clear()
                 lastMeasurementTimestamp = 0
+                currentDistanceMeters = 0.0
+                currentCalories = 0.0
                 _uiState.value = SportUiState()
                 stopSelf()
             }
@@ -142,6 +197,8 @@ class SportService : Service() {
             startTime = sessionStartTime,
             endTime = endTime,
             durationSeconds = totalTimeSeconds,
+            distanceMeters = currentDistanceMeters,
+            calories = currentCalories,
             heartRateMeasurements = measurements.toList()
         )
 
@@ -156,6 +213,8 @@ class SportService : Service() {
                 sport = sport,
                 durationSeconds = totalTimeSeconds,
                 averageHeartRate = avgHeartRate,
+                distanceMeters = currentDistanceMeters,
+                calories = currentCalories,
                 dataFilePath = file.absolutePath,
                 startTimeMillis = sessionStartTime,
                 endTimeMillis = endTime
@@ -173,11 +232,15 @@ class SportService : Service() {
     }
 
     private fun createNotification(content: String): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        
         return NotificationCompat.Builder(this, "sport_channel")
             .setContentTitle("FitCollect")
             .setContentText(content)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setOngoing(true)
+            .setContentIntent(pendingIntent)
             .build()
     }
 }

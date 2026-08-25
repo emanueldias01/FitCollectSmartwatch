@@ -122,6 +122,24 @@ fun HistoryScreen(
                                         text = viewModel.formatDuration(workout.durationSeconds),
                                         style = MaterialTheme.typography.bodySmall
                                     )
+                                    if (workout.sport.tracksDistance && workout.distanceMeters > 0) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = if (workout.distanceMeters < 1000) 
+                                                "${workout.distanceMeters.toInt()}m" 
+                                                else String.format(Locale.US, "%.2fkm", workout.distanceMeters / 1000.0),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                    if (workout.calories > 0) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "${workout.calories.toInt()} kcal",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
                                 }
                                 
                                 Row(verticalAlignment = Alignment.CenterVertically) {

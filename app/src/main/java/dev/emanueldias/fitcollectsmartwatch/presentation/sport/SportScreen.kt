@@ -41,6 +41,10 @@ fun SportScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    androidx.compose.runtime.LaunchedEffect(type) {
+        viewModel.prepareSport(type)
+    }
+
     ScreenScaffold {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -65,6 +69,8 @@ fun SportScreen(
                             type = type,
                             time = viewModel.formatTime(uiState.elapsedTimeSeconds),
                             bpm = uiState.bpm,
+                            distance = if (type.tracksDistance) viewModel.formatDistance(uiState.distanceMeters) else null,
+                            calories = uiState.calories,
                             isPaused = false,
                             onPause = viewModel::pauseTimer,
                             onStop = {
@@ -79,6 +85,8 @@ fun SportScreen(
                             type = type,
                             time = viewModel.formatTime(uiState.elapsedTimeSeconds),
                             bpm = uiState.bpm,
+                            distance = if (type.tracksDistance) viewModel.formatDistance(uiState.distanceMeters) else null,
+                            calories = uiState.calories,
                             isPaused = true,
                             onResume = viewModel::resumeTimer,
                             onStop = {
@@ -142,6 +150,8 @@ private fun TimerView(
     type: Sport,
     time: String,
     bpm: Double,
+    distance: String? = null,
+    calories: Double = 0.0,
     isPaused: Boolean,
     onPause: () -> Unit = {},
     onResume: () -> Unit = {},
@@ -168,9 +178,31 @@ private fun TimerView(
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.error
             )
-            Spacer(modifier = Modifier.width(4.dp))
             Text(
-                text = "BPM",
+                text = " BPM",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            if (distance != null) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = distance,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = String.format(java.util.Locale.US, "%.0f", calories),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.tertiary
+            )
+            Text(
+                text = " kcal",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

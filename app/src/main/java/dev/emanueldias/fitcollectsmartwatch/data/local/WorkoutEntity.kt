@@ -11,6 +11,8 @@ data class WorkoutEntity(
     val sport: Sport,
     val durationSeconds: Long,
     val averageHeartRate: Double,
+    val distanceMeters: Double = 0.0,
+    val calories: Double = 0.0,
     val dataFilePath: String,
     val startTimeMillis: Long,
     val endTimeMillis: Long

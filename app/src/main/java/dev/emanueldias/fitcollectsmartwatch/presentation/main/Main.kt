@@ -22,7 +22,6 @@ import dev.emanueldias.fitcollectsmartwatch.presentation.theme.FitCollectSmartwa
 
 @Composable
 fun MainScreen(
-    onClickSimpleHealth: () -> Unit = {},
     onNavigateToSport: (Sport) -> Unit = {}
 ) {
     val sports = Sport.entries
@@ -48,13 +47,7 @@ fun MainScreen(
             }
             items(sports) { sport ->
                 Button(
-                    onClick = {
-                        if (sport == Sport.HEART_RATE) {
-                            onClickSimpleHealth()
-                        } else {
-                            onNavigateToSport(sport)
-                        }
-                    },
+                    onClick = { onNavigateToSport(sport) },
                     label = { Text(sport.displayName) },
                     icon = {
                         Icon(

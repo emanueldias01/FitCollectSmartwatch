@@ -48,6 +48,7 @@ dependencies {
     ksp(libs.room.compiler)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.health.services.client)
+    implementation(libs.wear.ongoing)
     implementation(libs.compose.navigation)
     implementation(libs.activity.compose)
     implementation(libs.compose.foundation)

@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.health.services.client.data.DataTypeAvailability
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dev.emanueldias.fitcollectsmartwatch.health.HealthMessage
 import dev.emanueldias.fitcollectsmartwatch.health.HealthServicesManager
-import dev.emanueldias.fitcollectsmartwatch.health.HeartRateMessage
 import dev.emanueldias.fitcollectsmartwatch.health.SensorPermissions
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,12 +43,13 @@ class SimpleHeartViewModel(application: Application) : AndroidViewModel(applicat
 
             healthServicesManager.heartRateMeasureFlow().collect { message ->
                 _uiState.value = when (message) {
-                    is HeartRateMessage.Data -> _uiState.value.copy(
+                    is HealthMessage.HeartRate -> _uiState.value.copy(
                         bpm = message.bpm,
                         availability = DataTypeAvailability.AVAILABLE
                     )
-                    is HeartRateMessage.AvailabilityChanged ->
+                    is HealthMessage.AvailabilityChanged ->
                         _uiState.value.copy(availability = message.availability)
+                    else -> _uiState.value
                 }
             }
         }

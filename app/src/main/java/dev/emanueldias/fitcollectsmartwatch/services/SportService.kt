@@ -5,10 +5,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.wear.ongoing.OngoingActivity
 import androidx.wear.ongoing.Status
@@ -26,14 +28,16 @@ import dev.emanueldias.fitcollectsmartwatch.presentation.sport.SportUiState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 
 class SportService : Service() {
-    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var timerJob: Job? = null
     private var measureJob: Job? = null
+    private var wakeLock: PowerManager.WakeLock? = null
 
     private val _uiState = MutableStateFlow(SportUiState())
     val uiState = _uiState.asStateFlow()
@@ -81,20 +85,22 @@ class SportService : Service() {
         val notification = createNotification("Coleta em andamento...")
         
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH)
+            startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION)
         } else {
             startForeground(1, notification)
         }
+
+        acquireWakeLock()
         
         startTime = System.currentTimeMillis()
         timerJob?.cancel()
         timerJob = serviceScope.launch {
             while (true) {
                 val currentSessionTime = (System.currentTimeMillis() - startTime) / 1000
-                _uiState.value = _uiState.value.copy(
+                _uiState.update { it.copy(
                     phase = SportPhase.Running,
                     elapsedTimeSeconds = accumulatedTime + currentSessionTime
-                )
+                ) }
                 
                 updateOngoingActivity(sport)
                 
@@ -130,26 +136,27 @@ class SportService : Service() {
         measureJob?.cancel()
         measureJob = serviceScope.launch {
             healthServicesManager.exerciseFlow(sport).collect { message ->
-                when (message) {
-                    is HealthMessage.HeartRate -> {
-                        _uiState.value = _uiState.value.copy(bpm = message.bpm)
-                        
-                        val now = System.currentTimeMillis()
-                        if (now - lastMeasurementTimestamp >= 30000) {
-                            measurements.add(HeartRateMeasurement(now, message.bpm))
-                            lastMeasurementTimestamp = now
+                _uiState.update { state ->
+                    when (message) {
+                        is HealthMessage.HeartRate -> {
+                            val now = System.currentTimeMillis()
+                            if (now - lastMeasurementTimestamp >= 30000) {
+                                measurements.add(HeartRateMeasurement(now, message.bpm))
+                                lastMeasurementTimestamp = now
+                            }
+                            state.copy(bpm = message.bpm)
                         }
-                    }
-                    is HealthMessage.Distance -> {
-                        currentDistanceMeters = message.meters
-                        _uiState.value = _uiState.value.copy(distanceMeters = currentDistanceMeters)
-                    }
-                    is HealthMessage.Calories -> {
-                        currentCalories = message.kcal
-                        _uiState.value = _uiState.value.copy(calories = currentCalories)
-                    }
-                    is HealthMessage.AvailabilityChanged -> {
-                        _uiState.value = _uiState.value.copy(availability = message.availability)
+                        is HealthMessage.Distance -> {
+                            currentDistanceMeters = message.meters
+                            state.copy(distanceMeters = currentDistanceMeters)
+                        }
+                        is HealthMessage.Calories -> {
+                            currentCalories = message.kcal
+                            state.copy(calories = currentCalories)
+                        }
+                        is HealthMessage.AvailabilityChanged -> {
+                            state.copy(availability = message.availability)
+                        }
                     }
                 }
             }
@@ -159,8 +166,9 @@ class SportService : Service() {
     fun pauseSport() {
         timerJob?.cancel()
         measureJob?.cancel()
+        releaseWakeLock()
         accumulatedTime += (System.currentTimeMillis() - startTime) / 1000
-        _uiState.value = _uiState.value.copy(phase = SportPhase.Paused)
+        _uiState.update { it.copy(phase = SportPhase.Paused) }
         stopForeground(STOP_FOREGROUND_DETACH)
     }
 
@@ -168,6 +176,7 @@ class SportService : Service() {
         val endTime = System.currentTimeMillis()
         val totalTime = accumulatedTime + (if (startTime > 0 && _uiState.value.phase == SportPhase.Running) (endTime - startTime) / 1000 else 0)
         
+        releaseWakeLock()
         serviceScope.launch {
             saveWorkout(endTime, totalTime)
             
@@ -184,6 +193,27 @@ class SportService : Service() {
                 stopSelf()
             }
         }
+    }
+
+    private fun acquireWakeLock() {
+        if (wakeLock == null) {
+            val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "FitCollect:SportService")
+            wakeLock?.acquire()
+        }
+    }
+
+    private fun releaseWakeLock() {
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
+        wakeLock = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        releaseWakeLock()
+        serviceScope.cancel()
     }
 
     private suspend fun saveWorkout(endTime: Long, totalTimeSeconds: Long) {

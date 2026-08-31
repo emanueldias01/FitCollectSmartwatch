@@ -15,6 +15,8 @@
     <uses-permission android:name="com.samsung.android.hardware.sensormanager.permission.READ_ADDITIONAL_HEALTH_DATA" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <queries>
         <package android:name="com.google.android.wearable.healthservices" />
@@ -53,7 +55,7 @@
 
         <service
             android:name=".services.SportService"
-            android:foregroundServiceType="health"
+            android:foregroundServiceType="health|location"
             android:exported="false" />
     </application>
 

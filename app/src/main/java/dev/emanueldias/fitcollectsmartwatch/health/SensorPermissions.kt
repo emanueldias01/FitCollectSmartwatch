@@ -19,7 +19,12 @@ object SensorPermissions {
         }
 
     val required: Array<String>
-        get() = arrayOf(heartRatePermission, Manifest.permission.ACTIVITY_RECOGNITION)
+        get() = arrayOf(
+            heartRatePermission,
+            Manifest.permission.ACTIVITY_RECOGNITION,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_COARSE_LOCATION
+        )
 
     fun hasHeartRate(context: Context): Boolean =
         ContextCompat.checkSelfPermission(context, heartRatePermission) ==
@@ -29,6 +34,10 @@ object SensorPermissions {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACTIVITY_RECOGNITION) ==
                 PackageManager.PERMISSION_GRANTED
 
+    fun hasLocation(context: Context): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED
+
     fun hasAllRequired(context: Context): Boolean =
-        hasHeartRate(context) && hasActivityRecognition(context)
+        hasHeartRate(context) && hasActivityRecognition(context) && hasLocation(context)
 }

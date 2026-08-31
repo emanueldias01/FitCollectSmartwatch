@@ -8,6 +8,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
@@ -21,7 +22,6 @@ import java.util.*
 @Composable
 fun HistoryScreen(
     viewModel: HistoryViewModel = viewModel(),
-    onNavigateBack: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val listState = rememberScalingLazyListState()
@@ -96,65 +96,67 @@ fun HistoryScreen(
                         TitleCard(
                             onClick = { /* Opcional: ver detalhes */ },
                             onLongClick = { workoutToDelete = workout },
-                            title = { Text(workout.sport.displayName) },
-                            subtitle = { 
-                                Text(
-                                    text = dateFormat.format(Date(workout.startTimeMillis)),
-                                    style = MaterialTheme.typography.labelSmall
-                                ) 
-                            },
+                            title = { Text(workout.sport.displayName, style = MaterialTheme.typography.titleSmall) },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        painter = painterResource(workout.sport.iconRes),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(16.dp),
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = viewModel.formatDuration(workout.durationSeconds),
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                FlowRow(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            painter = painterResource(workout.sport.iconRes),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp),
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(2.dp))
+                                        Text(
+                                            text = viewModel.formatDuration(workout.durationSeconds),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                    
                                     if (workout.sport.tracksDistance && workout.distanceMeters > 0) {
-                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = if (workout.distanceMeters < 1000) 
                                                 "${workout.distanceMeters.toInt()}m" 
-                                                else String.format(Locale.US, "%.2fkm", workout.distanceMeters / 1000.0),
-                                            style = MaterialTheme.typography.bodySmall,
+                                                else String.format(Locale.US, "%.1fkm", workout.distanceMeters / 1000.0),
+                                            style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.primary
                                         )
                                     }
+                                    
                                     if (workout.calories > 0) {
-                                        Spacer(modifier = Modifier.width(8.dp))
                                         Text(
                                             text = "${workout.calories.toInt()} kcal",
-                                            style = MaterialTheme.typography.bodySmall,
+                                            style = MaterialTheme.typography.labelSmall,
                                             color = MaterialTheme.colorScheme.tertiary
+                                        )
+                                    }
+                                    
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = workout.averageHeartRate.toInt().toString(),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                        Text(
+                                            text = " BPM",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
                                 
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = workout.averageHeartRate.toInt().toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                    Text(
-                                        text = " BPM",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                                Text(
+                                    text = dateFormat.format(Date(workout.startTimeMillis)),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
                             }
                         }
                     }

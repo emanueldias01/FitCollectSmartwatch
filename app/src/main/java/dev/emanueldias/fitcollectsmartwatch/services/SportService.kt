@@ -11,6 +11,7 @@ import android.content.pm.ServiceInfo
 import android.os.Binder
 import android.os.IBinder
 import android.os.PowerManager
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.wear.ongoing.OngoingActivity
 import androidx.wear.ongoing.Status
@@ -20,6 +21,7 @@ import dev.emanueldias.fitcollectsmartwatch.data.local.WorkoutEntity
 import dev.emanueldias.fitcollectsmartwatch.data.model.HeartRateMeasurement
 import dev.emanueldias.fitcollectsmartwatch.data.model.Sport
 import dev.emanueldias.fitcollectsmartwatch.data.model.WorkoutData
+import dev.emanueldias.fitcollectsmartwatch.data.sync.WearSyncManager
 import dev.emanueldias.fitcollectsmartwatch.health.HealthServicesManager
 import dev.emanueldias.fitcollectsmartwatch.health.HealthMessage
 import dev.emanueldias.fitcollectsmartwatch.presentation.MainActivity
@@ -43,6 +45,7 @@ class SportService : Service() {
     val uiState = _uiState.asStateFlow()
 
     private lateinit var healthServicesManager: HealthServicesManager
+    private lateinit var wearSyncManager: WearSyncManager
     private var startTime: Long = 0
     private var accumulatedTime: Long = 0
     private var sessionStartTime: Long = 0
@@ -64,6 +67,7 @@ class SportService : Service() {
     override fun onCreate() {
         super.onCreate()
         healthServicesManager = HealthServicesManager.getInstance(applicationContext)
+        wearSyncManager = WearSyncManager(applicationContext)
         createNotificationChannel()
     }
 
@@ -237,8 +241,10 @@ class SportService : Service() {
         val file = File(applicationContext.filesDir, fileName)
         
         try {
+            // 1. Salvar JSON localmente
             file.writeText(jsonString)
             
+            // 2. Salvar no Room com isSynced = false
             val workoutEntity = WorkoutEntity(
                 sport = sport,
                 durationSeconds = totalTimeSeconds,
@@ -247,12 +253,25 @@ class SportService : Service() {
                 calories = currentCalories,
                 dataFilePath = file.absolutePath,
                 startTimeMillis = sessionStartTime,
-                endTimeMillis = endTime
+                endTimeMillis = endTime,
+                isSynced = false
             )
             
-            AppDatabase.getDatabase(applicationContext).workoutDao().insertWorkout(workoutEntity)
+            val workoutId = AppDatabase.getDatabase(applicationContext).workoutDao().insertWorkout(workoutEntity)
+            
+            // 3. Tentar sincronizar via Data Layer
+            val syncSuccess = wearSyncManager.syncWorkout(workoutData)
+            
+            if (syncSuccess) {
+                // 4. Se sucesso: atualizar flag e deletar JSON
+                AppDatabase.getDatabase(applicationContext).workoutDao().updateSyncStatus(workoutId.toInt(), true)
+                if (file.exists()) {
+                    file.delete()
+                    Log.d("SportService", "Arquivo JSON deletado após sincronização com sucesso")
+                }
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("SportService", "Erro ao salvar/sincronizar treino", e)
         }
     }
 

@@ -15,5 +15,6 @@ data class WorkoutEntity(
     val calories: Double = 0.0,
     val dataFilePath: String,
     val startTimeMillis: Long,
-    val endTimeMillis: Long
+    val endTimeMillis: Long,
+    val isSynced: Boolean = false
 )

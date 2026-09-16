@@ -16,6 +16,9 @@ interface WorkoutDao {
     @Query("SELECT * FROM workouts WHERE id = :id")
     suspend fun getWorkoutById(id: Int): WorkoutEntity?
 
+    @Query("UPDATE workouts SET isSynced = :synced WHERE id = :id")
+    suspend fun updateSyncStatus(id: Int, synced: Boolean)
+
     @androidx.room.Delete
     suspend fun deleteWorkout(workout: WorkoutEntity)
 }

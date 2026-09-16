@@ -152,11 +152,26 @@ fun HistoryScreen(
                                     }
                                 }
                                 
-                                Text(
-                                    text = dateFormat.format(Date(workout.startTimeMillis)),
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = dateFormat.format(Date(workout.startTimeMillis)),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    
+                                    if (workout.isSynced) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.outline_check_small_24),
+                                            contentDescription = "Sincronizado",
+                                            modifier = Modifier.size(16.dp),
+                                            tint = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

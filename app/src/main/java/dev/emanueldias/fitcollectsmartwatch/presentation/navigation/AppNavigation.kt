@@ -32,9 +32,7 @@ fun AppNavigation() {
         composable(
             route = "/history",
             content = {
-                HistoryScreen(
-                    onNavigateBack = { navController.popBackStack() }
-                )
+                HistoryScreen()
             }
         )
 
